@@ -1,4 +1,4 @@
-program XPDelivery;
+program Friends;
 
 uses
   Forms,
@@ -7,19 +7,20 @@ uses
   USysFun,
   UsysConst,
   UDataModule in 'Forms\UDataModule.pas' {FDM: TDataModule},
-  UFormMain in 'Forms\UFormMain.pas' {fMainForm},
   UFrameBase in 'Forms\UFrameBase.pas' {BaseFrame: TBaseFrame},
   UFormBase in 'Forms\UFormBase.pas' {BaseForm},
   UFrameNormal in 'Forms\UFrameNormal.pas' {fFrameNormal: TFrame},
-  UFormNormal in 'Forms\UFormNormal.pas' {fFormNormal};
+  UFormNormal in 'Forms\UFormNormal.pas' {fFormNormal},
+  UFormMain in 'Forms\UFormMain.pas' {fMainForm};
 
 {$R *.res}
+
 var
   gMutexHwnd: Hwnd;
   //互斥句柄
 
 begin
-  gMutexHwnd := CreateMutex(nil, True, 'RunSoft_BaseFrame');
+  gMutexHwnd := CreateMutex(nil, True, 'RunSoft_Friends');
   //创建互斥量
   if GetLastError = ERROR_ALREADY_EXISTS then
   begin
@@ -36,7 +37,7 @@ begin
   begin
     ShowDlg(sInvalidConfig, sHint, GetDesktopWindow); Exit;
   end; //配置文件被改动
-  
+
   Application.Initialize;
   Application.CreateForm(TFDM, FDM);
   Application.CreateForm(TfMainForm, fMainForm);

@@ -25,6 +25,48 @@ const
   cBC_ServerNow               = $0002;   //服务器当前时间
   cBC_IsSystemExpired         = $0003;   //系统是否已过期
 
+  cBC_GetTruckPoundData       = $0011;   //获取车辆称重数据
+  cBC_SaveTruckPoundData      = $0012;   //保存车辆称重数据
+  cBC_SaveTruckInfo           = $0013;   //保存车辆信息
+  cBC_UpdateTruckInfo         = $0014;   //保存车辆信息
+  cBC_GetCardPoundData        = $0015;   //获取IC卡称重数据
+  cBC_SaveCardPoundData       = $0016;   //保存IC卡称重数据
+
+  cBC_SyncME03                = $0021;   //同步供应到磅单
+  cBC_GetOrderGYValue         = $0022;   //获取订单供应量
+  cBC_GetSQLQueryOrder        = $0023;   //查询订单语句
+  cBC_GetSQLQueryCustomer     = $0024;   //查询客户语句
+  cBC_GetSQLQueryDispatch     = $0025;   //查询调拨订单
+
+  cBC_RemoteExecSQL           = $1011;
+  cBC_RemotePrint             = $1012;
+  cBC_IsTunnelOK              = $1013;
+  cBC_TunnelOC                = $1014;
+
+  {*Reader Index*}
+  cReader_PoundID             = 0;
+  cReader_NetValue            = 1;
+  cReader_Truck               = 2;
+  cReader_MID                 = 3;
+  cReader_MName               = 4;
+  cReader_CusID               = 5;
+  cReader_CusName             = 6;
+  cReader_SelfID              = 7;
+  cReader_SelfName            = 8;
+  cReader_TransName           = 9;
+
+  {*Reader name*}
+  sCard_PoundID               = 'Card_PoundID';
+  sCard_NetValue              = 'Card_NetValue';
+  sCard_Truck                 = 'Card_Truck';
+  sCard_Transport             = 'Card_Transport';
+  sCard_MaterialID            = 'Card_MaterialID';
+  sCard_Material              = 'Card_Material';
+  sCard_CustomerID            = 'Card_CustomerID';
+  sCard_Customer              = 'Card_Customer';
+  sCard_CompanyID             = 'Card_CompanyID';
+  sCard_CompanyName           = 'Card_CompanyName';
+
 type
   PWorkerQueryFieldData = ^TWorkerQueryFieldData;
   TWorkerQueryFieldData = record
@@ -87,6 +129,10 @@ procedure AnalyseBillItems(const nData: string; var nItems: TLadingBillItems);
 //解析由业务对象返回的交货单数据
 function CombineBillItmes(const nItems: TLadingBillItems): string;
 //合并交货单数据为业务对象能处理的字符串
+procedure AnalyseCardItems(const nData: string; var nList: TStrings);
+//解析IC卡数据
+function CombineCardItems(const nList: TStrings): string;
+//合并IC卡数据
 
 resourcestring
   {*PBWDataBase.FParam*}
@@ -105,19 +151,15 @@ resourcestring
   sBus_ServiceStatus          = 'Bus_ServiceStatus';    //服务状态
   sBus_GetQueryField          = 'Bus_GetQueryField';    //查询的字段
 
-  sBus_BusinessSaleBill       = 'Bus_BusinessSaleBill'; //交货单相关
   sBus_BusinessCommand        = 'Bus_BusinessCommand';  //业务指令
   sBus_HardwareCommand        = 'Bus_HardwareCommand';  //硬件指令
-  sBus_BusinessPurchaseOrder  = 'Bus_BusinessPurchaseOrder'; //采购单相关
 
   {*client function name*}
   sCLI_ServiceStatus          = 'CLI_ServiceStatus';    //服务状态
   sCLI_GetQueryField          = 'CLI_GetQueryField';    //查询的字段
 
-  sCLI_BusinessSaleBill       = 'CLI_BusinessSaleBill'; //交货单业务
   sCLI_BusinessCommand        = 'CLI_BusinessCommand';  //业务指令
   sCLI_HardwareCommand        = 'CLI_HardwareCommand';  //硬件指令
-  sCLI_BusinessPurchaseOrder  = 'CLI_BusinessPurchaseOrder'; //采购单相关
 
 implementation
 
@@ -296,6 +338,64 @@ begin
     nListA.Free;
   end;
 end;
+
+procedure AnalyseCardItems(const nData: string; var nList: TStrings);
+var nIdx: Integer;
+    nListA: TStrings;
+begin
+  if not Assigned(nList) then Exit;
+  //无返回
+
+  if Length(nData) < 1 then Exit;
+  //无数据
+
+  nListA := TStringList.Create;
+  try
+    nList.Clear;
+    nListA.Clear;
+    SplitStr(nData, nListA, 0, '|', False);
+
+    for nIdx := 0 to nListA.Count-1 do
+    begin
+      if nIdx = cReader_PoundID then
+         nList.Values[sCard_PoundID] := nListA[nIdx]
+      else  if nIdx = cReader_NetValue then
+         nList.Values[sCard_NetValue] := nListA[nIdx]
+      else  if nIdx = cReader_Truck then
+         nList.Values[sCard_Truck] := nListA[nIdx]
+      else  if nIdx = cReader_TransName then
+         nList.Values[sCard_Transport] := nListA[nIdx]
+      else  if nIdx = cReader_MID then
+         nList.Values[sCard_MaterialID] := nListA[nIdx]
+      else  if nIdx = cReader_MName then
+         nList.Values[sCard_Material] := nListA[nIdx]
+      else  if nIdx = cReader_CusID then
+         nList.Values[sCard_CustomerID] := nListA[nIdx]
+      else  if nIdx = cReader_CusName then
+         nList.Values[sCard_Customer] := nListA[nIdx]
+      else  if nIdx = cReader_SelfID then
+         nList.Values[sCard_CompanyID] := nListA[nIdx]
+      else  if nIdx = cReader_SelfName then
+         nList.Values[sCard_CompanyName] := nListA[nIdx];
+    end;
+  finally
+    nListA.Free;
+  end;
+end;
+
+function CombineCardItems(const nList: TStrings): string;
+begin
+  Result := nList.Values[sCard_PoundID] + '|' +              //磅单编号
+            nList.Values[sCard_NetValue] + '|' +             //净重(吨)
+            nList.Values[sCard_Truck] + '|' +                //车牌号码
+            nList.Values[sCard_MaterialID] + '|' +           //物料编号
+            nList.Values[sCard_Material] + '|' +             //物料名称
+            nList.Values[sCard_CustomerID] + '|' +           //客户编号
+            nList.Values[sCard_Customer] + '|' +             //客户名称
+            nList.Values[sCard_CompanyID] + '|' +            //公司编码
+            nList.Values[sCard_CompanyName] + '|' +          //公司名称
+            nList.Values[sCard_Transport];                   //运输单位
+end;  
 
 end.
 

@@ -75,6 +75,17 @@ begin
 
       FIconFile := ReadString(FProgID, 'IconFile', gPath + 'Icons\Icon.ini');
       FIconFile := StringReplace(FIconFile, '$Path\', gPath, [rfIgnoreCase]);
+
+      FIsManual := False;
+      //手动称重
+      FAutoPound := False;
+      //自动称重
+      
+      FPicBase := 0;
+      FPicPath := gPath + sCameraDir;
+
+      FVoiceUser := 0;
+      //语音计数
     end;
   finally
     if not Assigned(nIni) then nTmp.Free;

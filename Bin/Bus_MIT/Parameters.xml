@@ -10,21 +10,21 @@
   <Param>
     <DBList>
       <DB ID="local_db" Name="物流数据库">
-        <Host>dmzn</Host>
+        <Host>127.0.0.1</Host>
         <Port>1433</Port>
-        <DBName>ZXDelivery</DBName>
+        <DBName>XPDelivery</DBName>
         <User>sa</User>
         <Password>c2E=</Password>
         <ConnStr>UHJvdmlkZXI9U1FMT0xFREIuMTtQYXNzd29yZD0kUHdkO1BlcnNpc3QgU2VjdXJpdHkgSW5mbz1UcnVlO1VzZXIgSUQ9JFVzZXI7SW5pdGlhbCBDYXRhbG9nPSREQk5hbWU7RGF0YSBTb3VyY2U9JEhvc3Q=</ConnStr>
         <WorkerNum>6</WorkerNum>
       </DB>
-      <DB ID="King_K3" Name="济源数据库">
-        <Host>192.168.0.240</Host>
-        <Port>1433</Port>
-        <DBName>AIS20140718160143</DBName>
-        <User>sa</User>
-        <Password>MTIzUVdFYXNk</Password>
-        <ConnStr>UHJvdmlkZXI9U1FMT0xFREIuMTtQYXNzd29yZD0kUHdkO1BlcnNpc3QgU2VjdXJpdHkgSW5mbz1UcnVlO1VzZXIgSUQ9JFVzZXI7SW5pdGlhbCBDYXRhbG9nPSREQk5hbWU7RGF0YSBTb3VyY2U9JEhvc3Q=</ConnStr>
+      <DB ID="YonYou_NC" Name="NC计量数据">
+        <Host>127.0.0.1</Host>
+        <Port>5432</Port>
+        <DBName>postgres</DBName>
+        <User>postgres</User>
+        <Password>bmNqbA==</Password>
+        <ConnStr>UHJvdmlkZXI9TVNEQVNRTC4xO1Bhc3N3b3JkPSRQd2Q7UGVyc2lzdCBTZWN1cml0eSBJbmZvPVRydWU7VXNlciBJRD0kVXNlcjtFeHRlbmRlZCBQcm9wZXJ0aWVzPSJEUklWRVI9e1Bvc3RncmVTUUwgQU5TSX07REFUQUJBU0U9JERCTmFtZTtTRVJWRVI9JEhvc3Q7UE9SVD0kUG9ydDtVSUQ9JFVzZXI7UFdEPSRQd2Q7U1NMbW9kZT1hbGxvdyI=</ConnStr>
         <WorkerNum>3</WorkerNum>
       </DB>
     </DBList>
@@ -32,7 +32,7 @@
     <PerformList>
       <Perform ID="stand_per" Name="标准配置">
         <PortTCP>8081</PortTCP>
-        <PortHttp>8000</PortHttp>
+        <PortHttp>8082</PortHttp>
         <PoolSizeSAP>1</PoolSizeSAP>
         <PoolSizeConn>5</PoolSizeConn>
         <PoolSizeBusiness>20</PoolSizeBusiness>

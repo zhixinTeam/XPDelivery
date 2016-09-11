@@ -19,11 +19,29 @@ const
   {*Frame ID*}
   cFI_FrameSysLog       = $0001;                     //系统日志
   cFI_FrameViewLog      = $0002;                     //本地日志
+  cFI_FrameAuthorize    = $0003;                     //系统授权
+
+  cFI_FrameTrucks       = $0011;                     //车辆档案
+  cFI_FrameProvider     = $0012;                     //供应商
+  cFI_FrameMaterails    = $0013;                     //原材料
+
+  cFI_FramePoundManual  = $0021;
+  cFI_FramePoundQuery   = $0022;
+  cFI_FramePoundAuto    = $0023;
+  cFI_FrameDDDetailQuery = $0024;
+  cFI_FrameProvideDetailQuery = $0025;
 
   cFI_FormBackup        = $1001;                     //数据备份
   cFI_FormRestore       = $1002;                     //数据恢复
-  cFI_FormIncInfo       = $1003;                     //公司信息
+  cFI_FormAuthorize     = $1003;                     //安全验证
+  cFI_FormIncInfo       = $1004;                     //公司信息
   cFI_FormChangePwd     = $1005;                     //修改密码
+
+  cFI_FormGetTruck      = $1010;                     //查询车辆
+  cFI_FormTrucks        = $1011;                     //车辆管理
+  cFI_FormProvider      = $1012;                     //供应商
+  cFI_FormMaterails     = $1013;                     //原材料
+
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -53,6 +71,20 @@ type
     FRecMenuMax : integer;                           //导航栏个数
     FIconFile   : string;                            //图标配置文件
     FUsesBackDB : Boolean;                           //使用备份库
+
+    FLocalIP    : string;                            //本机IP
+    FLocalMAC   : string;                            //本机MAC
+    FLocalName  : string;                            //本机名称
+    FHardMonURL : string;                            //硬件守护
+
+    FFactNum    : string;                            //工厂编号
+    FSerialID   : string;                            //电脑编号
+
+    FPicBase    : Integer;                           //图片索引
+    FPicPath    : string;                            //图片目录
+    FIsManual   : Boolean;                           //手动过磅
+    FAutoPound  : Boolean;                           //自动过磅
+    FVoiceUser  : Integer;                           //语音计数
   end;
   //系统参数
 
@@ -96,6 +128,7 @@ ResourceString
   sReportDir          = 'Report\';                   //报表目录
   sBackupDir          = 'Backup\';                   //备份目录
   sBackupFile         = 'Bacup.idx';                 //备份索引
+  sCameraDir          = 'Camera\';                   //抓拍目录
 
   sConfigFile         = 'Config.Ini';                //主配置文件
   sConfigSec          = 'Config';                    //主配置小节
@@ -139,6 +172,18 @@ begin
   AddMenuModuleItem('MAIN_A03', cFI_FormBackup, mtForm);
   AddMenuModuleItem('MAIN_A04', cFI_FormRestore, mtForm);
   AddMenuModuleItem('MAIN_A05', cFI_FormChangePwd, mtForm);
+  AddMenuModuleItem('MAIN_A06', cFI_FrameAuthorize);
+
+  AddMenuModuleItem('MAIN_B01', cFI_FrameTrucks);
+  AddMenuModuleItem('MAIN_B02', cFI_FrameProvider);
+  AddMenuModuleItem('MAIN_B03', cFI_FrameMaterails);
+
+  AddMenuModuleItem('MAIN_C01', cFI_FramePoundManual);
+  AddMenuModuleItem('MAIN_C02', cFI_FramePoundAuto);
+  AddMenuModuleItem('MAIN_C03', cFI_FramePoundQuery);
+
+  AddMenuModuleItem('MAIN_L01', cFI_FrameProvideDetailQuery);
+  AddMenuModuleItem('MAIN_L02', cFI_FrameDDDetailQuery);
 end;
 
 //Desc: 清理模块列表
