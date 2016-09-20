@@ -166,6 +166,7 @@ procedure TfFrameAutoPoundItem.OnDestroyFrame;
 begin
   gPoundTunnelManager.ClosePort(FPoundTunnel.FID);
   //关闭表头端口
+
   FListA.Free;
   FListB.Free;
   FListC.Free;
@@ -732,7 +733,7 @@ end;
 procedure TfFrameAutoPoundItem.BtnSetZeroClick(Sender: TObject);
 begin
   inherited;
-  gPoundTunnelManager.WriteData(FPoundTunnel.FID, 'Z');
+  //gPoundTunnelManager.WriteData(FPoundTunnel.FID, 'Z');
 end;
 
 procedure TfFrameAutoPoundItem.ReadCardSync(const nCardNO: string;

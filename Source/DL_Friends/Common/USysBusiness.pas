@@ -48,11 +48,13 @@ var nStr, nStart: string;
     nSTime: TDateTime;
 begin
   nStr := 'Select DISTINCT pb.vbillcode,invcode,invname,invtype, ' +
-          'cvehicle,nnet,custcode,custname ' +
+          'cvehicle,nnet,t_cb.custcode as custcode, t_cb.custname as custname,'+
+          't_ub.custcode as uid, t_ub.custname as uname ' +
           'From meam_poundbill pb ' +
           ' left join meam_bill t1 on pb.vsourcebillcode=t1.VBILLCODE'        +
           ' left join Bd_cumandoc t_cd on t_cd.pk_cumandoc=t1.pk_cumandoc'    +
           ' left join bd_cubasdoc t_cb on t_cb.pk_cubasdoc=t_cd.pk_cubasdoc'  +
+          ' left join bd_cubasdoc t_ub on pb.pk_corp=t_ub.pk_corp1'           + // π”√∞ıµ•PK_Corp
           ' left join Bd_invbasdoc t_ib on t_ib.pk_invbasdoc=pb.PK_INVBASDOC' +
           ' Where t1.Vbilltype=''ME25'' and ';
 
@@ -83,8 +85,8 @@ begin
              FieldByName('invname').AsString  + '|' +
              FieldByName('custcode').AsString  + '|' +
              FieldByName('custname').AsString  + '|' +
-             gSysParam.FCompanyID  + '|' +
-             gSysParam.FCompanyName; 
+             FieldByName('uid').AsString  + '|' +
+             FieldByName('uname').AsString;
   end;
 
 end;

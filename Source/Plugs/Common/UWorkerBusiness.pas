@@ -1253,6 +1253,9 @@ begin
       FTruck   := FieldByName('P_Truck').AsString;
       FPoundID := FieldByName('P_ID').AsString;
 
+      FMemo    := FieldByName('P_Transport').AsString;
+      //运输单位
+
       with FPData do
       begin
         FValue    := FieldByName('P_PValue').AsFloat;
@@ -1491,7 +1494,8 @@ begin
               MakeField(nDS, 'vdef11', 1),
               MakeField(nDS, 'vdef12', 1),
               MakeField(nDS, 'vdef13', 1),
-              MakeField(nDS, 'vdef14', 1),
+              //MakeField(nDS, 'vdef14', 1),
+              SF('vdef14', nBills[nIdx].FMemo),                                 //运输单位
               MakeField(nDS, 'vdef15', 1),
               MakeField(nDS, 'vdef16', 1),
               MakeField(nDS, 'vdef17', 1),

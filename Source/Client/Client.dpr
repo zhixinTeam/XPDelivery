@@ -1,6 +1,7 @@
 program Client;
 
 uses
+  FastMM4,
   Forms,
   Windows,
   ULibFun,

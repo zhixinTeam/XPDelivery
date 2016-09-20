@@ -51,6 +51,9 @@ type
   protected
     procedure Execute; override;
     //线程体
+
+    procedure ClearCardReader;
+    //释放读卡器
   public
     constructor Create;
     destructor Destroy; override;
@@ -100,12 +103,20 @@ begin
   //xxxxxx
 
   FWaiter := TWaitObject.Create;
-  FWaiter.Interval := ICardReadInterval * 1000;
+  FWaiter.Interval := ICardReadInterval * 100;
 end;
 
 destructor TPoundCardReader.Destroy;
 begin
+  StopCardReader;
+  //Close all
+
+  ClearCardReader;
+  //释放读卡器
+
   FSyncSection.Free;
+  FCardReads.Free;
+
   FWaiter.Free;
   inherited;
 end;
@@ -128,7 +139,7 @@ end;
 procedure TPoundCardReader.StartCardReader;
 begin
   Resume;
-end;  
+end;
 
 procedure TPoundCardReader.StopCardReader;
 begin
@@ -155,7 +166,8 @@ begin
 
         with nPItem^ do
         begin
-          nReadCard := gMHReaderManager.ReadCardData(FTunnel);
+          if Assigned(gMHReaderManager) then
+            nReadCard := gMHReaderManager.ReadCardData(FTunnel);
 
           if (nReadCard <> FCardLast) or
           (GetTickCount-FTimeLast > ICardReadKeepalive * 1000) then
@@ -217,6 +229,28 @@ begin
     begin
       nPItem := FCardReads[nIdx];
       if nPItem.FID <> nCardReadIdx then continue;
+
+      Dispose(nPItem);
+      FCardReads.Delete(nIdx);
+
+      Dec(FCardReaderUser);
+    end;
+  finally
+    FSyncSection.Leave;
+  end;
+end;
+
+procedure TPoundCardReader.ClearCardReader;
+var nIdx: Integer;
+    nPItem: PTCardReadRecord;
+begin
+  FSyncSection.Enter;
+  try
+    if FCardReads.Count<1 then Exit;
+
+    for nIdx:=FCardReads.Count - 1 downto 0 do
+    begin
+      nPItem := FCardReads[nIdx];
 
       Dispose(nPItem);
       FCardReads.Delete(nIdx);

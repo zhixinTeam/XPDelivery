@@ -671,7 +671,7 @@ begin
       begin
         nCard := nStr;
         Break;
-      end else Sleep(100);
+      end else Sleep(1000);
 
       Application.ProcessMessages;
     end;
@@ -912,9 +912,10 @@ begin
     Timer_SaveSuc.Enabled := False;
     //停止定时器
 
+    {
     if (FUIData.FPoundID <> '') or RadioCC.Checked then
       PrintPoundReport(FPoundID, True);
-    //原料或出厂模式
+    //原料或出厂模式  }
 
     if (FUIData.FPoundID <> '') and (FFromCard = sFlag_Yes) then
     begin

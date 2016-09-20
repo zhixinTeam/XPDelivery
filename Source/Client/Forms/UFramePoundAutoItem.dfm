@@ -614,6 +614,7 @@ inherited fFrameAutoPoundItem: TfFrameAutoPoundItem
     Top = 8
     Caption = #22320#30917#34920#22836#32622#38646
     ParentFont = False
+    Visible = False
     OnClick = BtnSetZeroClick
   end
   object Timer1: TTimer

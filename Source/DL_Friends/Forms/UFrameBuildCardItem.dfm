@@ -137,7 +137,7 @@ inherited fFrameReaderItem: TfFrameReaderItem
       Left = 145
       Top = 74
       ParentFont = False
-      Properties.ReadOnly = True
+      Properties.ReadOnly = False
       Style.Font.Charset = GB2312_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -20
