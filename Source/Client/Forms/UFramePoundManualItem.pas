@@ -181,6 +181,9 @@ begin
   gPoundTunnelManager.ClosePort(FPoundTunnel.FID);
   //关闭表头端口
 
+  gPoundCardReader.DelCardReader(FCardReader);
+  //删除读卡通道
+
   AdjustStringsItem(EditMID.Properties.Items, True);
   AdjustStringsItem(EditPID.Properties.Items, True);
 

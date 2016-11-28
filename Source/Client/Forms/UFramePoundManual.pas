@@ -121,7 +121,11 @@ begin
   Dec(gSysParam.FVoiceUser);
   if gSysParam.FVoiceUser < 1 then
     gVoiceHelper.StopVoice;
-  //xxxxx 
+  //xxxxx
+
+  if gPoundCardReader.CardReaderUser < 1 then
+    gPoundCardReader.StopCardReader;
+  //xxxxx
 
   nIni := TIniFile.Create(gPath + sFormConfig);
   try
@@ -192,14 +196,14 @@ begin
       CardReader := gPoundCardReader.AddCardReader(ReadCardSync, nT.FID);
 
       LoadCollapseConfig(nIdx <> 0);
-      //折叠面板  
+      //折叠面板
     except
       on E: Exception do
         ShowDlg(E.Message, sWarn);
-    end; 
+    end;
   end;
 
-  if gPoundTunnelManager.Tunnels.Count>0 then gPoundCardReader.StartCardReader;
+  if gPoundCardReader.CardReaderUser>0 then gPoundCardReader.StartCardReader;
   //通道不为0，启动读卡线程
 end;
 

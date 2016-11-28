@@ -127,6 +127,11 @@ begin
 
   if Assigned(gSysLoger) then
     gSysLoger.DelReceiver(FReceiver);
+
+  if gPoundCardReader.CardReaderUser < 1 then
+    gPoundCardReader.StopCardReader;
+  //xxxxx
+    
   inherited;
 end;
 
@@ -224,8 +229,9 @@ begin
       end;
     end;
 
-    if Tunnels.Count>0 then gPoundCardReader.StartCardReader;
-      //通道不为0，启动读卡线程
+    if gPoundCardReader.CardReaderUser>0 then
+      gPoundCardReader.StartCardReader;
+    //通道不为0，启动读卡线程
   end;
 end;
 

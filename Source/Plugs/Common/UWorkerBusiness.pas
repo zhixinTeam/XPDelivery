@@ -1255,6 +1255,10 @@ begin
 
       FMemo    := FieldByName('P_Transport').AsString;
       //运输单位
+      FPrice   := FieldByName('P_LimValue').AsFloat;
+      //原订单量
+      FStatus  := FieldByName('P_SrcPoundID').AsString;
+      //原磅单号
 
       with FPData do
       begin
@@ -1492,9 +1496,11 @@ begin
               MakeField(nDS, 'vdef1', 1),
               MakeField(nDS, 'vdef10', 1),
               MakeField(nDS, 'vdef11', 1),
-              MakeField(nDS, 'vdef12', 1),
-              MakeField(nDS, 'vdef13', 1),
+              //MakeField(nDS, 'vdef12', 1),
+              //MakeField(nDS, 'vdef13', 1),
               //MakeField(nDS, 'vdef14', 1),
+              SF('vdef12', nBills[nIdx].FStatus),                               //原磅单
+              SF('vdef13', nBills[nIdx].FPrice, sfVal),                         //票重
               SF('vdef14', nBills[nIdx].FMemo),                                 //运输单位
               MakeField(nDS, 'vdef15', 1),
               MakeField(nDS, 'vdef16', 1),

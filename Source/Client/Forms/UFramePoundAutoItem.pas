@@ -132,7 +132,7 @@ implementation
 
 uses
   ULibFun, UFormBase, UDataModule, USysBusiness, UMgrMHReader, UMgrRemoteVoice,
-  USysLoger, USysConst, USysDB, UBase64;
+  USysLoger, USysConst, USysDB, UBase64, UPoundCardReader;
 
 const
   cFlag_ON    = 10;
@@ -166,6 +166,9 @@ procedure TfFrameAutoPoundItem.OnDestroyFrame;
 begin
   gPoundTunnelManager.ClosePort(FPoundTunnel.FID);
   //关闭表头端口
+
+  gPoundCardReader.DelCardReader(FCardReader);
+  //删除读卡通道
 
   FListA.Free;
   FListB.Free;
@@ -609,11 +612,16 @@ begin
 end;
 
 procedure TfFrameAutoPoundItem.TimerDelayTimer(Sender: TObject);
+var nStr: String;
 begin
   try
     TimerDelay.Enabled := False;
     FLastCardDone := GetTickCount;
-    WriteLog(Format('对车辆[ %s ]称重完毕.', [FUIData.FTruck]));
+    
+    nStr := '磅站[ %s.%s ]===对车辆[ %s ]称重完毕.';
+    nStr := Format(nStr, [FPoundTunnel.FID,
+            FPoundTunnel.FName, FUIData.FTruck]);
+    WriteSysLog(nStr);
 
     RemoteTunnelOC(FPoundTunnel.FProber, sFlag_Yes);
     //打开红绿灯
@@ -754,15 +762,17 @@ begin
     else nDoneTmp := FLastCardDone;
     //新卡时重置
 
-    WriteSysLog('读取到新卡信息:::' + nCardNO + '=>旧卡信息:::' + FLastCard);
+    nStr := '磅站[ %s.%s ]===新卡信息:::[%s]=>旧卡信息:::[%s]';
+    nStr := Format(nStr, [FPoundTunnel.FID,
+            FPoundTunnel.FName, DecodeBase64(nCardNO), DecodeBase64(FLastCard)]);
+    WriteSysLog(nStr);
+
     nLast := Trunc((GetTickCount - nDoneTmp) / 1000);
     if (nLast < FPoundTunnel.FCardInterval) And (nDoneTmp <> 0) then
     begin
       nStr := '磁卡[ %s ]需等待 %d 秒后才能过磅';
       nStr := Format(nStr, [nCardNO, FPoundTunnel.FCardInterval - nLast]);
-
       WriteLog(nStr);
-      //PlayVoice(nStr);
 
       nStr := Format('磅站[ %s.%s ]: ',[FPoundTunnel.FID,
               FPoundTunnel.FName]) + nStr;
