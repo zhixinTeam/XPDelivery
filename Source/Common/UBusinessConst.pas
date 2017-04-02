@@ -120,6 +120,8 @@ type
     FYSValid    : string;          //验收结果，Y验收成功；N拒收；
     FKZValue    : Double;          //供应扣除
     FMemo       : string;          //动作备注
+
+    FPrinter    : string;          //打印机,根据过磅读卡器指定
   end;
 
   TLadingBillItems = array of TLadingBillItem;
@@ -248,6 +250,7 @@ begin
 
         FYSValid:= Values['YSValid'];
         FMemo := Values['Memo'];
+        FPrinter := Values['Printer'];
       end;
 
       Inc(nInt);
@@ -325,6 +328,7 @@ begin
         Values['KZValue']    := FloatToStr(FKZValue);
         Values['YSValid']    := FYSValid;
         Values['Memo']       := FMemo;
+        Values['Printer']    := FPrinter;
       end;
 
       nListA.Add(PackerEncodeStr(nListB.Text));

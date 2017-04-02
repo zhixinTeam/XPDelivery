@@ -66,7 +66,6 @@ type
     CheckSound: TcxCheckBox;
     Timer_Savefail: TTimer;
     Timer_SaveSuc: TTimer;
-    BtnSetZero: TcxLabel;
     procedure Timer1Timer(Sender: TObject);
     procedure N1Click(Sender: TObject);
     procedure N3Click(Sender: TObject);
@@ -86,7 +85,6 @@ type
     procedure CheckZDClick(Sender: TObject);
     procedure Timer_SavefailTimer(Sender: TObject);
     procedure Timer_SaveSucTimer(Sender: TObject);
-    procedure BtnSetZeroClick(Sender: TObject);
   private
     { Private declarations }
     FPoundTunnel: PPTTunnelItem;
@@ -818,6 +816,7 @@ begin
   with FBillItems[0] do
   begin
     FFactory := gSysParam.FFactNum;
+    FPrinter := Additional.Values['Printer'];
     //xxxxx
 
     if FNextStatus = sFlag_TruckBFM then
@@ -987,12 +986,5 @@ begin
   end;
 end;
 
-procedure TfFrameManualPoundItem.BtnSetZeroClick(Sender: TObject);
-begin
-  inherited;
-  //xxxxx
-  gPoundTunnelManager.WriteData(FPoundTunnel.FID, 'Z');
-end;
-//÷√¡„
 
 end.

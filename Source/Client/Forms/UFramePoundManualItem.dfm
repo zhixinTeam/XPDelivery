@@ -674,13 +674,6 @@ inherited fFrameManualPoundItem: TfFrameManualPoundItem
     OnClick = CheckZDClick
     Width = 80
   end
-  object BtnSetZero: TcxLabel
-    Left = 176
-    Top = 4
-    Caption = #22320#30917#34920#22836#32622#38646
-    ParentFont = False
-    OnClick = BtnSetZeroClick
-  end
   object Timer1: TTimer
     Enabled = False
     OnTimer = Timer1Timer

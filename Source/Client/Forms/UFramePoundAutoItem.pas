@@ -500,6 +500,7 @@ begin
   with FBillItems[0] do
   begin
     FFactory := gSysParam.FFactNum;
+    FPrinter := Additional.Values['Printer'];
     //xxxxx
 
     if FNextStatus = sFlag_TruckBFP then

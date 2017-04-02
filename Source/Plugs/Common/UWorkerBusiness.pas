@@ -751,7 +751,7 @@ begin
       end;
 
       {$IFDEF HardMon}
-      if not THardwareCommander.CallMe(cBC_RemotePrint, FPoundID, '', @nOut) then
+      if not THardwareCommander.CallMe(cBC_RemotePrint, FPoundID, FPrinter, @nOut) then
         WriteLog(nOut.FData);
       {$ENDIF}
     end;
