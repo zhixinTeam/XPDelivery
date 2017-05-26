@@ -32,11 +32,13 @@ const
   cBC_GetCardPoundData        = $0015;   //获取IC卡称重数据
   cBC_SaveCardPoundData       = $0016;   //保存IC卡称重数据
 
+  cBC_SyncME25                = $0020;   //同步销售到磅单
   cBC_SyncME03                = $0021;   //同步供应到磅单
   cBC_GetOrderGYValue         = $0022;   //获取订单供应量
   cBC_GetSQLQueryOrder        = $0023;   //查询订单语句
   cBC_GetSQLQueryCustomer     = $0024;   //查询客户语句
   cBC_GetSQLQueryDispatch     = $0025;   //查询调拨订单
+  cBC_GetOrderFHValue         = $0026;   //获取订单发货量
 
   cBC_RemoteExecSQL           = $1011;
   cBC_RemotePrint             = $1012;

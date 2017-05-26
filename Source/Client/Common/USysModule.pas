@@ -14,7 +14,8 @@ uses
   UFormPassword, UFrameAuthorize, UFormAuthorize, UFrameTrucks, UFormTruck,
   UFormGetTruck, UFramePMaterails, UFormPMaterails,UFramePProvider, UFormPProvider,
   UFramePoundManual, UFramePoundAuto, UFramePoundQuery, UFrameQueryProvideDetail,
-  UFrameQueryDDDetail;
+  UFrameQueryDDDetail,
+  UFrameReqSale, UFrameReqProvide, UFrameReqDispatch, UFormGetCustom, UFormGetZhiKa;
 
 procedure InitSystemObject;
 procedure RunSystemObject;

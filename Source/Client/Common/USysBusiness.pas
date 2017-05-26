@@ -13,6 +13,23 @@ uses
   UFormBase, cxMCListBox, UMgrPoundTunnels, HKVNetSDK, USysConst, USysDB,
   USysLoger, UBase64, UFormWait, Graphics, ShellAPI;
 
+type
+  TOrderItemInfo = record
+    FCusID: string;       //客户号
+    FCusName: string;     //客户名
+    FSaleMan: string;     //业务员
+    FStockID: string;     //物料号
+    FStockName: string;   //物料名
+
+    FStockBrand: string;  //物料品牌
+    FStockArea : string;  //产地，矿点
+
+    FTruck: string;       //车牌号
+    FBatchCode: string;   //批次号
+    FOrders: string;      //订单号(可多张)
+    FValue: Double;       //可用量
+  end;
+  
 //------------------------------------------------------------------------------
 function AdjustHintToRead(const nHint: string): string;
 //调整提示内容
@@ -55,6 +72,27 @@ function RemoteTunnelOK(const nID: string): Boolean;
 
 function GetTruckLastTime(const nTruck: string; var nLast: Integer): Boolean;
 //获取车辆活动间隔
+function GetLastTruckP(const nTruck: string;var nList: TStrings): Boolean;
+//获取上次过磅皮重
+
+function GetQueryOrderSQL(const nType,nWhere: string): string;
+//订单查询SQL语句
+function GetQueryDispatchSQL(const nWhere: string): string;
+//调拨订单SQL语句
+function GetQueryCustomerSQL(const nCusID,nCusName: string): string;
+//客户查询SQL语句
+function LoadCustomerInfo(const nCID: string; const nList: TcxMCListBox;
+ var nHint: string): TDataSet;
+//加载客户信息
+function BuildOrderInfo(const nItem: TOrderItemInfo): string;
+//打包订单信息
+procedure AnalyzeOrderInfo(const nOrder: string; var nItem: TOrderItemInfo);
+//解析订单信息
+function GetOrderFHValue(const nOrders: TStrings;
+  const nQueryFreeze: Boolean=True): Boolean;
+//获取订单发货量
+function GetOrderGYValue(const nOrders: TStrings): Boolean;
+//获取订单已供应量
 
 implementation
 
@@ -386,6 +424,7 @@ begin
   if (not Result) or (nOut.FData = '') then Exit;
   nPoundID := nOut.FData;
 
+  {$IFDEF HardMon}
   nList := TStringList.Create;
   try
     CapturePicture(nTunnel, nList);
@@ -398,6 +437,7 @@ begin
   finally
     nList.Free;
   end;
+  {$ENDIF}
 end;
 
 //Date: 2012-4-15
@@ -555,6 +595,7 @@ begin
   if (not Result) or (nOut.FData = '') then Exit;
   nPoundID := nOut.FData;
 
+  {$IFDEF HardMon}
   nList := TStringList.Create;
   try
     CapturePicture(nTunnel, nList);
@@ -567,6 +608,7 @@ begin
   finally
     nList.Free;
   end;
+  {$ENDIF}
 end;
 
 //Date: 2016/9/8
@@ -575,8 +617,10 @@ end;
 procedure RemoteTunnelOC(const nID, nOC: string);
 var nOut: TWorkerBusinessCommand;
 begin
+  {$IFDEF HardMon}
   if not CallBusinessHardware(cBC_TunnelOC, nID, nOC, @nOut) then
    WriteLog(nOut.FData);
+  {$ENDIF} 
 end;
 
 //Date: 2016/9/8
@@ -585,11 +629,233 @@ end;
 function RemoteTunnelOK(const nID: string): Boolean;
 var nOut: TWorkerBusinessCommand;
 begin
+  {$IFNDEF HardMon}
+  Result := True;
+  Exit;
+  //无硬件支持
+  {$ENDIF}
+
   Result := CallBusinessHardware(cBC_IsTunnelOK, nID, '', @nOut);
   if (not Result) or (nOut.FData = '') then Exit;
 
   Result := nOut.FData = sFlag_Yes;
 end;
 
+//Date: 2014-12-16
+//Parm: 订单类型;查询条件
+//Desc: 获取nType类型的订单查询语句
+function GetQueryOrderSQL(const nType,nWhere: string): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  if CallBusinessCommand(cBC_GetSQLQueryOrder, nType, nWhere, @nOut) then
+       Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2014-12-16
+//Parm: 查询条件
+//Desc: 获取调拨订单查询语句
+function GetQueryDispatchSQL(const nWhere: string): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  if CallBusinessCommand(cBC_GetSQLQueryDispatch, '', nWhere, @nOut) then
+       Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2014-12-18
+//Parm: 客户编号;客户名称
+//Desc: 获取nCusName的模糊查询SQL语句
+function GetQueryCustomerSQL(const nCusID,nCusName: string): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  if CallBusinessCommand(cBC_GetSQLQueryCustomer, nCusID, nCusName, @nOut) then
+       Result := nOut.FData
+  else Result := '';
+end;
+
+//Desc: 载入nCID客户的信息到nList中,并返回数据集
+function LoadCustomerInfo(const nCID: string; const nList: TcxMCListBox;
+ var nHint: string): TDataSet;
+var nStr: string;
+begin
+  nStr := 'select custcode,t2.pk_cubasdoc,custname,user_name,' +
+          't1.createtime from Bd_cumandoc t1' +
+          '  left join bd_cubasdoc t2 on t2.pk_cubasdoc=t1.pk_cubasdoc' +
+          '  left join sm_user t_su on t_su.cuserid=t1.creator ' +
+          ' where custcode=''%s''';
+  nStr := Format(nStr, [nCID]);
+
+  nList.Clear;
+  Result := FDM.QueryTemp(nStr, True);
+
+  if Result.RecordCount > 0 then
+  with nList.Items,Result do
+  begin
+    Add('客户编号:' + nList.Delimiter + FieldByName('custcode').AsString);
+    Add('客户名称:' + nList.Delimiter + FieldByName('custname').AsString + ' ');
+    Add('创 建 人:' + nList.Delimiter + FieldByName('user_name').AsString + ' ');
+    Add('创建时间:' + nList.Delimiter + FieldByName('createtime').AsString + ' ');
+  end else
+  begin
+    Result := nil;
+    nHint := '客户信息已丢失';
+  end;
+end;
+
+//Date: 2014-12-23
+//Parm: 订单项
+//Desc: 将nItem数据打包
+function BuildOrderInfo(const nItem: TOrderItemInfo): string;
+var nList: TStrings;
+begin
+  nList := TStringList.Create;
+  try
+    with nList,nItem do
+    begin
+      Clear;
+      Values['CusID']     := FCusID;
+      Values['CusName']   := FCusName;
+      Values['SaleMan']   := FSaleMan;
+
+      Values['StockID']   := FStockID;
+      Values['StockName'] := FStockName;
+      Values['StockArea'] := FStockArea;
+      Values['StockBrand']:= FStockBrand;
+
+      Values['Truck']     := FTruck;
+      Values['BatchCode'] := FBatchCode;
+      Values['Orders']    := PackerEncodeStr(FOrders);
+      Values['Value']     := FloatToStr(FValue);
+    end;
+
+    Result := EncodeBase64(nList.Text);
+    //编码
+  finally
+    nList.Free;
+  end;   
+end;
+
+//Date: 2014-12-23
+//Parm: 待解析;订单数据
+//Desc: 解析nOrder,存入nItem
+procedure AnalyzeOrderInfo(const nOrder: string; var nItem: TOrderItemInfo);
+var nList: TStrings;
+begin
+  nList := TStringList.Create;
+  try
+    with nList,nItem do
+    begin
+      Text := DecodeBase64(nOrder);
+      //解码
+
+      FCusID := Values['CusID'];
+      FCusName := Values['CusName'];
+      FSaleMan := Values['SaleMan'];
+
+      FStockID := Values['StockID'];
+      FStockName := Values['StockName'];
+      FStockArea := Values['StockArea'];
+      FStockBrand:= Values['StockBrand'];
+
+      FTruck := Values['Truck'];
+      FBatchCode := Values['BatchCode'];
+      FOrders := PackerDecodeStr(Values['Orders']);
+      FValue := StrToFloat(Values['Value']);
+    end;
+  finally
+    nList.Free;
+  end;
+end;
+
+//Date: 2014-12-24
+//Parm: 订单列表
+//Desc: 获取指定的发货量
+function GetOrderFHValue(const nOrders: TStrings;
+  const nQueryFreeze: Boolean=True): Boolean;
+var nOut: TWorkerBusinessCommand;
+    nFlag: string;
+begin
+  if nQueryFreeze then
+       nFlag := sFlag_Yes
+  else nFlag := sFlag_No;
+
+  Result := CallBusinessCommand(cBC_GetOrderFHValue,
+             EncodeBase64(nOrders.Text), nFlag, @nOut);
+  //xxxxx
+
+  if Result then
+    nOrders.Text := DecodeBase64(nOut.FData);
+  //xxxxx
+end;
+
+//Date: 2015-01-08
+//Parm: 订单列表
+//Desc: 获取指定的发货量
+function GetOrderGYValue(const nOrders: TStrings): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_GetOrderGYValue,
+             EncodeBase64(nOrders.Text), '', @nOut);
+  //xxxxx
+
+  if Result then
+    nOrders.Text := DecodeBase64(nOut.FData);
+  //xxxxx
+end;
+
+function GetLastTruckP(const nTruck: string;var nList: TStrings): Boolean;
+var nSQL: string;
+begin
+  Result := False;
+  if nTruck = '' then Exit;
+  //init
+
+  nSQL := 'Select Top 1 * From %s ' +
+          'Where P_Truck=''%s'' And P_MValue Is not NULL ' +
+          'Order By P_ID Desc';
+  //最新一次完成两次配对称重的车辆记录        
+  nSQL := Format(nSQL, [sTable_PoundLog, nTruck]);
+  with FDM.QuerySQL(nSQL) do
+  begin
+    if RecordCount < 1 then Exit;
+
+    nList.Clear;
+
+    nSQL := '车辆[ %s ]最近一次空车称重信息如下:';
+    nSQL := Format(nSQL, [nTruck]);
+    nList.Add(nSQL);
+    nSQL := '皮重: [ %.2f ]';
+    nSQL := Format(nSQL, [FieldByName('P_PValue').AsFloat]);
+    nList.Add(nSQL);
+    nSQL := '时间: [ %s ]';
+    nSQL := Format(nSQL, [FieldByName('P_PDate').AsString]);
+    nList.Add(nSQL);
+    nSQL := '磅站: [ %s ]';
+    nSQL := Format(nSQL, [FieldByName('P_PStation').AsString]);
+    nList.Add(nSQL);
+    nSQL := '司磅员: [ %s ]';
+    nSQL := Format(nSQL, [FieldByName('P_PMan').AsString]);
+    nList.Add(nSQL);
+    nSQL := '请确认是否采用本次皮重记录?';
+    nList.Add(nSQL);
+
+    nSQL := AdjustHintToRead(nList.Text);
+    if QueryDlg(nSQL, sHint) then
+    begin
+      with nList do
+      begin
+        Clear;
+
+        Values['PValue'] := Format('%.2f', [FieldByName('P_PValue').AsFloat]);
+        Values['PStation'] := FieldByName('P_PStation').AsString;
+        Values['PDate']  := FieldByName('P_PDate').AsString;
+        Values['PMan']   := FieldByName('P_PMan').AsString;
+      end;
+
+      Result := True;
+    end;
+  end;  
+end;
 
 end.

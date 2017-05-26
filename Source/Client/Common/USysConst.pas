@@ -14,6 +14,7 @@ const
   cSBar_Time            = 1;                         //时间面板索引
   cSBar_User            = 2;                         //用户面板索引
   cRecMenuMax           = 5;                         //最近使用导航区最大条目数
+  cItemIconIndex        = 11;                        //默认的提货单列表图标
 
 const
   {*Frame ID*}
@@ -31,6 +32,10 @@ const
   cFI_FrameDDDetailQuery = $0024;
   cFI_FrameProvideDetailQuery = $0025;
 
+  cFI_FrameReqSale      = $0030;                     //销售申请
+  cFI_FrameReqProvide   = $0031;                     //采购申请
+  cFI_FrameReqDispatch  = $0032;                     //调拨单
+
   cFI_FormBackup        = $1001;                     //数据备份
   cFI_FormRestore       = $1002;                     //数据恢复
   cFI_FormAuthorize     = $1003;                     //安全验证
@@ -41,6 +46,8 @@ const
   cFI_FormTrucks        = $1011;                     //车辆管理
   cFI_FormProvider      = $1012;                     //供应商
   cFI_FormMaterails     = $1013;                     //原材料
+  cFI_FormGetOrder      = $1014;                     //获取订单
+  cFI_FormGetCustom     = $1015;                     //获取客户
 
 
   {*Command*}
@@ -177,6 +184,9 @@ begin
   AddMenuModuleItem('MAIN_B01', cFI_FrameTrucks);
   AddMenuModuleItem('MAIN_B02', cFI_FrameProvider);
   AddMenuModuleItem('MAIN_B03', cFI_FrameMaterails);
+  AddMenuModuleItem('MAIN_B07', cFI_FrameReqProvide);
+  AddMenuModuleItem('MAIN_B08', cFI_FrameReqSale);
+  AddMenuModuleItem('MAIN_B09', cFI_FrameReqDispatch);
 
   AddMenuModuleItem('MAIN_C01', cFI_FramePoundManual);
   AddMenuModuleItem('MAIN_C02', cFI_FramePoundAuto);

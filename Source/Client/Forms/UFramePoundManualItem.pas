@@ -15,6 +15,15 @@ uses
   ULEDFont, cxRadioGroup, UFrameBase, Buttons;
 
 type
+  TOrderItem = record
+    FOrder: string;         //订单号
+    FMaxValue: Double;      //最大可用
+    FKDValue: Double;       //开单量
+  end;
+
+  TOrderItems = array of TOrderItem;
+  //订单列表
+  
   TfFrameManualPoundItem = class(TBaseFrame)
     GroupBox1: TGroupBox;
     EditValue: TLEDFontNum;
@@ -96,6 +105,8 @@ type
     //称重数据
     FListA,FListB,FListC: TStrings;
     //数据列表
+    FOrderItems: TOrderItems;
+    //订单列表
     FTitleHeight: Integer;
     FPanelHeight: Integer;
     //折叠参数
@@ -116,6 +127,8 @@ type
     //读取交货单
     procedure LoadTruckPoundItem(const nTruck: string);
     //读取车辆称重
+    procedure LoadOrderPoundItem(const nOrders: string;const nTruck: string = '');
+    //加载调拨订单
     function SavePoundData(var nPoundID: string): Boolean;
     //保存称重
     procedure PlayVoice(const nStrtext: string);
@@ -124,6 +137,11 @@ type
     //播放声音
     procedure CollapsePanel(const nCollapse: Boolean; const nAuto: Boolean = True);
     //折叠面板
+    function AdjustOrderValue(const nNet: Double): Boolean;
+    //校验调拨量
+    procedure LoadCustomOrder(const nCusID: string;
+      const nTruck: string=''; const nType: string='S');
+    //加载客户订单
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -395,20 +413,87 @@ begin
     ShowMsg('请输入车牌号', sHint); Exit;
   end;
 
-  if not GetTruckPoundItem(nTruck, nData) then
+  with FUIData do
   begin
-    SetUIData(True);
-    Exit;
+    if not ((FID <> '') and (FID = FZhiKa)) then //非调拨订单
+    begin
+      if not GetTruckPoundItem(nTruck, nData) then
+      begin
+        SetUIData(True);
+        Exit;
+      end;
+
+      FInnerData := nData[0];
+      FUIData := FInnerData;
+    end else
+
+    begin
+      FTruck := Trim(EditTruck.Text);
+      if (FNextStatus <> sFlag_TruckBFM) and GetLastTruckP(FTruck, FListB) then
+      begin
+        FNextStatus := sFlag_TruckBFM;
+        //下一状态称毛重
+
+        with FPData do
+        begin
+          FOperator:= FListB.Values['PMan'];
+          FStation := FListB.Values['PStation'];
+          FValue   := StrToFloat(FListB.Values['PValue']);
+          FDate    := Str2DateTime(FListB.Values['PDate']);
+        end;  
+      end;
+    end;  
   end;
 
-  FInnerData := nData[0];
-  FUIData := FInnerData;
   SetUIData(False);
+  //xxxxxx
 
   {$IFNDEF DEBUG}
   if not FPoundTunnel.FUserInput then
     gPoundTunnelManager.ActivePort(FPoundTunnel.FID, OnPoundData, True);
   {$ENDIF}
+end;
+
+procedure TfFrameManualPoundItem.LoadOrderPoundItem(const nOrders: string;
+    const nTruck: string);
+var nItem: TOrderItemInfo;
+begin
+  if nOrders = '' then Exit;
+  //无订单信息
+  
+  FillChar(nItem, SizeOf(TOrderItemInfo), #0);
+  FillChar(FInnerData, SizeOf(TLadingBillItem), #0);
+  AnalyzeOrderInfo(nOrders, nItem);
+
+  with FInnerData do
+  begin
+    FID    := nItem.FOrders;
+    FCusID := nItem.FCusID;
+    FCusName := nItem.FCusName;
+    //客商
+
+    FType    := sFlag_San;
+    FStockNo := nItem.FStockID;
+    FStockName := nItem.FStockName;
+    //物料
+
+    FZhiKa   := nItem.FOrders;
+    FValue   := nItem.FValue;
+    FPModel  := sFlag_PoundPD;
+    //订单及类型
+
+    if nTruck <> '' then
+    FTruck   := nTruck;
+
+    if nItem.FSaleMan = 'ME25' then
+         FPType   := sFlag_Sale
+    else FPType := sFlag_DuanDao;
+
+    FSelected:= True;
+  end;  
+
+  FUIData := FInnerData; 
+  SetUIData(False);
 end;
 
 //------------------------------------------------------------------------------
@@ -549,6 +634,7 @@ end;
 procedure TfFrameManualPoundItem.EditPIDKeyPress(Sender: TObject;
   var Key: Char);
 var nStr: string;
+    nP: TFormCommandParam;
 begin
   if Key = #13 then
   begin
@@ -563,6 +649,18 @@ begin
         EditMIDPropertiesChange(EditPID);
         Exit; //重新加载供应订单
       end;
+    end;
+
+    nP.FParamA := EditPID.Text;
+    CreateBaseFormItem(cFI_FormGetCustom, FPopedom, @nP);
+    if (nP.FCommand <> cCmd_ModalResult) or (nP.FParamA <> mrOK) then Exit;
+
+    SetCtrlData(EditPID, nP.FParamB);
+    if EditPID.ItemIndex < 0 then
+    begin
+      nStr := Format('%s=%s', [nP.FParamB, nP.FParamC]);
+      InsertStringsItem(EditPID.Properties.Items, nStr);
+      SetCtrlData(EditPID, nP.FParamB);
     end;
   end;
 end;
@@ -734,6 +832,7 @@ begin
 end;
 
 procedure TfFrameManualPoundItem.EditMIDPropertiesChange(Sender: TObject);
+var nP: TFormCommandParam;
 begin
   if Sender = EditTruck then
   begin
@@ -783,30 +882,157 @@ begin
     if FUIData.FCusName <> EditPID.Properties.Items[EditPID.ItemIndex] then
       Exit;
     //用户手工输入
+
+    LoadCustomOrder(FUIData.FCusID, '', sFlag_DuanDao);
   end;
 end;
 
 //------------------------------------------------------------------------------
-//Desc: 原材料或临时
+//Desc: 校验订单量
+function TfFrameManualPoundItem.AdjustOrderValue(const nNet: Double): Boolean;
+var nStr: string;
+    nInt, nIdx: Integer;
+    nP: TFormCommandParam;
+    nOrder: TOrderItemInfo;
+begin
+  Result := False;
+
+  FListA.Clear;
+  FListA.Add(Trim(FUIData.FZhiKa));
+  nStr := AdjustListStrFormat2(FListA, '''', True, ',', False, False);
+
+  FListB.Clear;
+  FListB.Values['MeamKeys'] := nStr;
+  if FUIData.FPType = sFlag_DuanDao then
+       nStr := GetQueryDispatchSQL(EncodeBase64(FListB.Text))
+  else nStr := GetQueryOrderSQL('103', EncodeBase64(FListB.Text));
+
+  if nStr = '' then Exit;
+
+  with FDM.QueryTemp(nStr, True) do
+  begin
+    if RecordCount < 1 then
+    begin
+      nStr := StringReplace(FListA.Text, #13#10, ',', [rfReplaceAll]);
+      nStr := Format('订单[ %s ]信息已丢失.', [nStr]);
+
+      ShowDlg(nStr, sHint);
+      Exit;
+    end;
+
+    SetLength(FOrderItems, RecordCount);
+    nInt := 0;
+    First;
+
+    while not Eof do
+    begin
+      with FOrderItems[nInt] do
+      begin
+        FOrder := FieldByName('pk_meambill').AsString;
+        FMaxValue := FieldByName('NPLANNUM').AsFloat;
+        FKDValue := 0;
+      end;
+
+      Inc(nInt);
+      Next;
+    end;
+  end;
+
+  if not GetOrderFHValue(FListA) then Exit;
+  //获取已发货量
+
+  for nIdx:=Low(FOrderItems) to High(FOrderItems) do
+  with FOrderItems[nIdx] do
+  begin
+    nStr := FListA.Values[FOrder];
+    if not IsNumber(nStr, True) then Continue;
+
+    FMaxValue := FMaxValue - Float2Float(StrToFloat(nStr), cPrecision, False);
+    //可用量 = 计划量 - 已发量
+
+    if FloatRelation(FMaxValue, nNet, rtGE) then
+    begin
+      Result := True;
+      Exit;
+    end;
+    //订单量足够 
+  end;
+
+  //----------------------------------------------------------------------------
+  nStr := '本次发货量[ %.2f ]超出订单剩余量,请选择新的订单.';
+  nStr := Format(nStr, [nNet]);
+  ShowDlg(nStr, sHint);
+
+  while True do
+  begin
+    nP.FParamA := FUIData.FCusID;
+    nP.FParamB := FUIData.FStockNo;
+    nP.FParamC := FUIData.FPType;
+    CreateBaseFormItem(cFI_FormGetOrder, PopedomItem, @nP);
+
+    if (nP.FCommand <> cCmd_ModalResult) or (nP.FParamA <> mrOK) then Exit;
+    nStr := nP.FParamB;
+
+    AnalyzeOrderInfo(nStr, nOrder);
+    if nOrder.FValue >= nNet then
+    begin
+      FUIData.FID    := nOrder.FOrders;
+      FUIData.FZhiKa := nOrder.FOrders;
+      Break;
+    end;
+
+    nStr := '订单可用量不足,详情如下: ' + #13#10#13#10 +
+            '※.订单量: %.2f 吨'  + #13#10 +
+            '※.待开量: %.2f 吨'  + #13#10 +
+            '※.相  差: %.2f 吨'  + #13#10#13#10 +
+            '请重新选择订单.';
+    nStr := Format(nStr, [nOrder.FValue, nNet, nNet - nOrder.FValue]);
+    ShowDlg(nStr, sHint);
+  end;
+
+  Result := True;
+end;
+
+procedure TfFrameManualPoundItem.LoadCustomOrder(const nCusID: string;
+  const nTruck: string; const nType: string);
+var nP: TFormCommandParam;
+begin
+  nP.FParamA := nCusID;
+  nP.FParamB := '';
+  nP.FParamC := nType;
+  CreateBaseFormItem(cFI_FormGetOrder, FPopedom, @nP);
+  if (nP.FCommand <> cCmd_ModalResult) or (nP.FParamA <> mrOK) then Exit;
+  LoadOrderPoundItem(nP.FParamB, nTruck);
+end;    
+
+
+//Desc: 保存过磅数据
 function TfFrameManualPoundItem.SavePoundData(var nPoundID: string): Boolean;
 begin
   Result := False;
   //init
 
-  if ((FUIData.FPData.FValue <= 0) and (FUIData.FMData.FValue <= 0)) or
-     ((FUIData.FNextStatus = sFlag_TruckBFM) and (FUIData.FMData.FValue <= 0))then
+  with FUIData do
   begin
-    ShowMsg('请先称重', sHint);
-    Exit;
-  end;
-
-  if (FUIData.FPData.FValue > 0) and (FUIData.FMData.FValue > 0) then
-  begin
-    if FUIData.FPData.FValue > FUIData.FMData.FValue then
+    if ((FPData.FValue <= 0) and (FMData.FValue <= 0)) or
+       ((FNextStatus = sFlag_TruckBFM) and (FMData.FValue <= 0))then
     begin
-      ShowMsg('皮重应小于毛重', sHint);
+      ShowMsg('请先称重', sHint);
       Exit;
     end;
+
+    if (FPData.FValue > 0) and (FMData.FValue > 0) then
+    begin
+      if FPData.FValue > FMData.FValue then
+      begin
+        ShowMsg('皮重应小于毛重', sHint);
+        Exit;
+      end;
+
+      if ((FPType = sFlag_DuanDao) or (FPType = sFlag_Sale)) and
+         (not AdjustOrderValue(FMData.FValue - FPData.FValue))  then
+        Exit;
+    end;  
   end;
 
   SetLength(FBillItems, 1);
@@ -914,11 +1140,6 @@ begin
     Timer_SaveSuc.Enabled := False;
     //停止定时器
 
-    {
-    if (FUIData.FPoundID <> '') or RadioCC.Checked then
-      PrintPoundReport(FPoundID, True);
-    //原料或出厂模式  }
-
     if (FUIData.FPoundID <> '') and (FFromCard = sFlag_Yes) then
     begin
       FListB.Clear;
@@ -938,7 +1159,7 @@ begin
       nStr := AdjustHintToRead(FListB.Text);
       if QueryDlg(nStr, sHint) then
       begin
-        SetLength(FBillItems, 1);
+        {SetLength(FBillItems, 1);
         FillChar(FBillItems[0], SizeOf(FBillItems[0]), #0);
         //init
 
@@ -963,7 +1184,10 @@ begin
         begin
           EditTruck.Text := FBillItems[0].FTruck;
           EditTruckKeyPress(nil, nKey);
-        end;        
+        end;  }
+
+        LoadCustomOrder(FUIData.FCusID, FUIData.FTruck, sFlag_DuanDao);
+        //加载调拨订单
 
         Exit;
       end;  
