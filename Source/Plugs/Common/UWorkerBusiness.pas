@@ -756,6 +756,17 @@ begin
           (not CallMe(cBC_SyncME25, FPoundID, '', @nOut))then
           raise Exception.Create(nOut.FData);
         //同步销售到NC
+
+        nSQL := 'Select D_Value From %s Where D_Name=''%s'' And D_Value=''%s''';
+        nSQL := Format(nSQL, [sTable_SysDict, sFlag_PrintBill, FStockNo]);
+        with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+        if RecordCount > 0 then
+        begin
+          {$IFDEF HardMon}
+          if not THardwareCommander.CallMe(cBC_RemotePrint, FPoundID, FPrinter, @nOut) then
+            WriteLog(nOut.FData);
+          {$ENDIF}
+        end;
       except
         on nErr: Exception do
         begin
@@ -771,11 +782,6 @@ begin
           Exit;
         end;
       end;
-
-      {$IFDEF HardMon}
-      if not THardwareCommander.CallMe(cBC_RemotePrint, FPoundID, FPrinter, @nOut) then
-        WriteLog(nOut.FData);
-      {$ENDIF}
     end;
 
     FOut.FData := FPoundID;

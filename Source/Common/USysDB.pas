@@ -132,6 +132,7 @@ ResourceString
   sFlag_OrderInFact   = 'OrderInFact';               //工厂可发货订单
   sFlag_FactoryItem   = 'FactoryItem';               //工厂信息项
   sFlag_SyncMaterail  = 'SyncMaterail';              //同步到NC的物料
+  sFlag_PrintBill     = 'PrintStockBill';            //需打印品种
 
   sFlag_InWHouse      = 'Warehouse';                 //库存可发(收)货订单
   sFlag_InWHID        = 'WarehouseID';               //仓库可发(收)货订单
