@@ -237,15 +237,10 @@ end;
 
 //Desc: ÷¥––‘∂≥Ã¥Ú”°
 function THardwareCommander.RemotePrint(var nData: string): Boolean;
-var nPrinter: string;
 begin
   Result := True;
-
-  if FIn.FExtParam <> '' then
-       nPrinter := FIn.FExtParam
-  else nPrinter := gRemotePrinter.Host.FName;
-
-  gRemotePrinter.PrintBill(FIn.FData + #9 + nPrinter);
+  if Length(Trim(FIn.FExtParam)) < 1 then Exit;
+  gRemotePrinter.PrintBill(FIn.FData + #9 + Trim(FIn.FExtParam));
 end;
 
 //Date: 2014-10-01
