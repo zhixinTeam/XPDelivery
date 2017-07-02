@@ -470,6 +470,7 @@ begin
     FID    := nItem.FOrders;
     FCusID := nItem.FCusID;
     FCusName := nItem.FCusName;
+    FNCMemo  := nItem.FStockArea;
     //©мил
 
     FType    := sFlag_San;

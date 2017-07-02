@@ -331,7 +331,7 @@ ResourceString
        'P_Transport varChar(80), P_SrcPoundID varChar(32),' +
        'P_Direction varChar(10), P_PModel varChar(10), P_Status Char(1),' +
        'P_KZValue $Float default 0, P_Valid Char(1), P_PrintNum Integer Default 1,' +
-       'P_DelMan varChar(32), P_DelDate DateTime)';
+       'P_DelMan varChar(32), P_DelDate DateTime, P_Memo varChar(128))';
   {-----------------------------------------------------------------------------
    ¹ý°õ¼ÇÂ¼: Materails
    *.P_ID: ±àºÅ

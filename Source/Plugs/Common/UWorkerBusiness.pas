@@ -670,6 +670,7 @@ begin
               SF('P_Valid', sFlag_Yes),
               SF('P_SrcPoundID', FMemo),
               SF('P_Transport', FYSValid),
+              SF('P_Memo', FNCMemo), //NC备注信息
               SF('P_PrintNum', 0, sfVal)
               ], sTable_PoundLog, '', True);
       gDBConnManager.WorkerExec(FDBConn, nSQL);
@@ -942,7 +943,8 @@ begin
      'pk_meambill_b as pk_meambill,VBILLCODE,VBILLTYPE,COPERATOR,user_name,' +  //订单表头
      'TMAKETIME,NPLANNUM,cvehicle,vbatchcode,unitname,areaclname,t1.vdef10,' +  //订单表体(t1.vdef10:矿点)
      't1.vdef2,t1.vdef5,t1.pk_cumandoc,custcode,cmnecode,custname,t_cd.def30,'+ //客商信息(t1.vdef5:品牌;t1.vdef2:区域流向)
-     'invcode,invname,invtype ' +                                               //物料
+     'invcode,invname,invtype, ' +                                              //物料
+     't1.vmemo ' +
      'from meam_bill t1 ' +
      '  left join sm_user t_su on t_su.cuserid=t1.coperator ' +
      '  left join meam_bill_b t2 on t2.PK_MEAMBILL=t1.PK_MEAMBILL' +
@@ -1072,7 +1074,8 @@ begin
   FOut.FData := 'select ' +
      'pk_meambill_b as pk_meambill,VBILLCODE,VBILLTYPE,COPERATOR,user_name,' + //订单表头
      'TMAKETIME,NPLANNUM,cvehicle,vbatchcode,t1.pk_corp_main,unitname,' +      //订单表体
-     'invcode,invname,invtype ' +                                              //物料
+     'invcode,invname,invtype, ' +                                             //物料
+     't1.vmemo '  +                                                            //备注信息
      'from meam_bill t1 ' +
      '  left join sm_user t_su on t_su.cuserid=t1.coperator ' +
      '  left join meam_bill_b t2 on t2.PK_MEAMBILL=t1.PK_MEAMBILL' +

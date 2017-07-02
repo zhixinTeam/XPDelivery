@@ -123,6 +123,7 @@ type
     FKZValue    : Double;          //供应扣除
     FMemo       : string;          //动作备注
 
+    FNCMemo     : string;          //NC备注信息
     FPrinter    : string;          //打印机,根据过磅读卡器指定
   end;
 
@@ -252,6 +253,7 @@ begin
 
         FYSValid:= Values['YSValid'];
         FMemo := Values['Memo'];
+        FNCMemo  := Values['NCMemo'];
         FPrinter := Values['Printer'];
       end;
 
@@ -330,6 +332,7 @@ begin
         Values['KZValue']    := FloatToStr(FKZValue);
         Values['YSValid']    := FYSValid;
         Values['Memo']       := FMemo;
+        Values['NCMemo']     := FNCMemo;
         Values['Printer']    := FPrinter;
       end;
 

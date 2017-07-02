@@ -267,6 +267,14 @@ begin
             ListDetail.Column[3].Caption := '矿点';
           end else
 
+          if FOrderType = sFlag_DuanDao then
+
+          begin
+            FAreaName := FieldByName('vmemo').AsString;
+            ListDetail.Column[2].Caption := '数量(吨)';
+            ListDetail.Column[3].Caption := '备注';
+          end else
+
           if FOrderType = sFlag_Sale then
           begin
             FStockBrand:= FieldByName('vdef5').AsString;
