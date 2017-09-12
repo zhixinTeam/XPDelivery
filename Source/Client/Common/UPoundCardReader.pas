@@ -14,7 +14,7 @@ uses
 
 {$I Link.inc}
 const
-  ICardReadInterval = 5;//√Î
+  ICardReadInterval = 3;//√Î
   ICardReadKeepalive = 300; //√Î
 
 type

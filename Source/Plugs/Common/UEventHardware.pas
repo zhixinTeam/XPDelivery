@@ -66,6 +66,9 @@ begin
 
     if not Assigned(gProberOPCManager) then
     begin
+      gProberOPCMessageRead := False;
+      //不使用消息同步
+
       gProberOPCManager := TProberOPCManager.Create;
       gProberOPCManager.LoadConfig(nCfg + 'TruckProberOPC.xml');
     end;

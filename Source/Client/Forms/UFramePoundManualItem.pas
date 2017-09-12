@@ -718,11 +718,19 @@ begin
   if FloatRelation(nVal, FPoundTunnel.FPort.FMinValue, rtLE, 1000) then Exit;
   //读数小于过磅最低值时,退出
 
-  if not RemoteTunnelOK(FPoundTunnel.FProber) then
-  begin
-    ShowMsg('车辆未停到位,请移动车辆', sHint);
-    Exit;
-  end;  
+  BtnReadNumber.Enabled := False;
+  try
+    Application.ProcessMessages;
+    //update ui
+    
+    if not RemoteTunnelOK(FPoundTunnel.FProber) then
+    begin
+      ShowMsg('车辆未停到位,请移动车辆', sHint);
+      Exit;
+    end;
+  finally
+    BtnReadNumber.Enabled := True;
+  end;
 
   if FInnerData.FPData.FValue > 0 then
   begin

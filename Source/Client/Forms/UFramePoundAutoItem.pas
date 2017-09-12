@@ -239,7 +239,16 @@ begin
   Timer2.Tag := 0;
   Timer2.Enabled := False;
 
-  RemoteTunnelOC(FPoundTunnel.FProber, sFlag_No);
+  try
+    RemoteTunnelOC(FPoundTunnel.FProber, sFlag_No);
+  except
+    on E: Exception do
+    begin
+      WriteSysLog(Format('磅站[ %s.%s ]: %s', [FPoundTunnel.FID,
+                                               FPoundTunnel.FName, E.Message]));
+      //loged
+    end;
+  end;
 end;
 
 //Desc: 设置通道
@@ -794,8 +803,8 @@ begin
               FPoundTunnel.FName]) + E.Message;
       WriteSysLog(nStr);
 
-      SetUIData(True);
-      //错误则重置
+      Timer_SaveFail.Enabled := True;
+      //reset ui
     end;
   end;
 end;
