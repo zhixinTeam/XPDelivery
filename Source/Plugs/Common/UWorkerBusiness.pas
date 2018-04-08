@@ -1727,7 +1727,7 @@ begin
 
     with nBills[0] do
     begin
-      FType    := FieldByName('P_Order').AsString;
+      FType    := FieldByName('P_Type').AsString;
       FZhiKa   := FieldByName('P_Bill').AsString;
       FStockNo := FieldByName('P_MID').AsString;
       FStockName := FieldByName('P_MName').AsString;
@@ -1803,7 +1803,7 @@ begin
       FListA.Clear;
       //init sql list
 
-      if nBills[0].FType = sFlag_Sale then
+      if nBills[0].FType = sFlag_DuanDao then
            nBills[0].FType := '0001ZA1000000001VYRH'
       else nBills[0].FType := '0001AA10000000009NEY';
       //业务类型转业务模式
